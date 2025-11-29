@@ -1,14 +1,21 @@
 package org.example.BankManagement.model;
 
-
+import jakarta.persistence.Entity;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.example.BankManagement.exception.InsufficientFundsException;
 
 import java.util.Objects;
 
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
 public class SavingsAccount extends Account {
-    private final double interestRate;
+    private double interestRate;
 
-    public SavingsAccount(double balance, Customer customer,  double interestRate) {
+    public SavingsAccount(double balance, Customer customer, double interestRate) {
         super(balance, customer);
         this.interestRate = interestRate;
     }
@@ -24,8 +31,10 @@ public class SavingsAccount extends Account {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof SavingsAccount that)) return false;
-        if (!super.equals(o)) return false;
+        if (!(o instanceof SavingsAccount that))
+            return false;
+        if (!super.equals(o))
+            return false;
         return Double.compare(interestRate, that.interestRate) == 0;
     }
 

@@ -1,12 +1,19 @@
 package org.example.BankManagement.model;
 
-
+import jakarta.persistence.Entity;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.example.BankManagement.exception.InsufficientFundsException;
 
 import java.util.Objects;
 
-public class CheckingAccount extends Account{
-    private final double overdraftLimit;
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+public class CheckingAccount extends Account {
+    private double overdraftLimit;
 
     public CheckingAccount(double balance, Customer customer, double overdraftLimit) {
         super(balance, customer);
@@ -16,18 +23,19 @@ public class CheckingAccount extends Account{
     @Override
     public void withdraw(double amount) throws InsufficientFundsException {
 
-        if(overdraftLimit + this.getBalance() <= amount){
+        if (overdraftLimit + this.getBalance() <= amount) {
             throw new InsufficientFundsException("Overdraft limit exceeded.");
-        }
-        else{
+        } else {
             this.setBalance(this.getBalance() - amount);
         }
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof CheckingAccount that)) return false;
-        if (!super.equals(o)) return false;
+        if (!(o instanceof CheckingAccount that))
+            return false;
+        if (!super.equals(o))
+            return false;
         return Double.compare(overdraftLimit, that.overdraftLimit) == 0;
     }
 

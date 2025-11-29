@@ -1,23 +1,41 @@
 package org.example.BankManagement.service;
 
 import org.example.BankManagement.exception.AccountNotFoundException;
-import org.example.BankManagement.exception.InvalidAmountException;
 import org.example.BankManagement.exception.InsufficientFundsException;
+import org.example.BankManagement.exception.InvalidAmountException;
 import org.example.BankManagement.model.*;
+import org.example.BankManagement.repository.AccountRepository;
+import org.example.BankManagement.repository.CustomerRepository;
+import org.example.BankManagement.repository.TransactionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class BankService implements IBankService {
-    private final List<Account> accounts = new ArrayList<>();
-    private final List<Customer> customers = new ArrayList<>();
+
+    private final AccountRepository accountRepository;
+    private final CustomerRepository customerRepository;
+    private final TransactionRepository transactionRepository;
+
+    @Autowired
+    public BankService(AccountRepository accountRepository, CustomerRepository customerRepository,
+            TransactionRepository transactionRepository) {
+        this.accountRepository = accountRepository;
+        this.customerRepository = customerRepository;
+        this.transactionRepository = transactionRepository;
+    }
 
     @Override
-    public Account createAccount(String customerFullName, String customerAddress, String accountPassword, String accountType, double initialBalance) {
+    @Transactional
+    public Account createAccount(String customerFullName, String customerAddress, String accountPassword,
+            String accountType, double initialBalance) {
         Customer newCustomer = new Customer(customerFullName, customerAddress, accountPassword);
-        customers.add(newCustomer);
+        customerRepository.save(newCustomer);
 
         Account newAccount;
         if ("SAVINGS".equalsIgnoreCase(accountType)) {
@@ -27,29 +45,26 @@ public class BankService implements IBankService {
         } else {
             return null;
         }
-        accounts.add(newAccount);
-        return newAccount;
+        return accountRepository.save(newAccount);
     }
 
     @Override
     public Account findAccount(String accountNumber) throws AccountNotFoundException {
-        return accounts.stream()
-                .filter(acc -> acc.getAccountNumber().equals(accountNumber))
-                .findFirst()
-                .orElseThrow(() -> new AccountNotFoundException("Account with number '" + accountNumber + "' not found."));
+        return accountRepository.findById(accountNumber)
+                .orElseThrow(
+                        () -> new AccountNotFoundException("Account with number '" + accountNumber + "' not found."));
     }
 
     @Override
     public Customer findCustomerByPasswordAndId(String customerId, String password) {
-        return customers.stream()
-                .filter(c -> c.getCustomerId().equals(customerId) && c.getAccountPassword().equals(password))
-                .findFirst()
+        return customerRepository.findById(customerId)
+                .filter(c -> c.getAccountPassword().equals(password))
                 .orElse(null);
     }
 
     @Override
     public List<Account> findAccountsByCustomerId(String customerId) {
-        return accounts.stream()
+        return accountRepository.findAll().stream()
                 .filter(acc -> acc.getOwner().getCustomerId().equals(customerId))
                 .collect(Collectors.toList());
     }
@@ -62,15 +77,16 @@ public class BankService implements IBankService {
 
     @Override
     public List<Customer> getAllCustomers() {
-        return new ArrayList<>(customers);
+        return customerRepository.findAll();
     }
 
     @Override
     public List<Account> getAllAccounts() {
-        return new ArrayList<>(accounts);
+        return accountRepository.findAll();
     }
 
     @Override
+    @Transactional
     public void deposit(String accountNumber, double amount) throws AccountNotFoundException, InvalidAmountException {
         if (amount <= 0) {
             throw new InvalidAmountException("Deposit amount must be positive.");
@@ -79,10 +95,13 @@ public class BankService implements IBankService {
         account.deposit(amount);
         Transaction transaction = new Transaction(LocalDate.now(), TransactionType.DEPOSIT, amount);
         account.addTransaction(transaction);
+        accountRepository.save(account);
     }
 
     @Override
-    public void withdraw(String accountNumber, double amount) throws AccountNotFoundException, InvalidAmountException, InsufficientFundsException {
+    @Transactional
+    public void withdraw(String accountNumber, double amount)
+            throws AccountNotFoundException, InvalidAmountException, InsufficientFundsException {
         if (amount <= 0) {
             throw new InvalidAmountException("Withdrawal amount must be positive.");
         }
@@ -90,10 +109,13 @@ public class BankService implements IBankService {
         account.withdraw(amount);
         Transaction transaction = new Transaction(LocalDate.now(), TransactionType.WITHDRAWAL, amount);
         account.addTransaction(transaction);
+        accountRepository.save(account);
     }
 
     @Override
-    public void transferFunds(String fromAccountNumber, String toAccountNumber, double amount) throws AccountNotFoundException, InvalidAmountException, InsufficientFundsException {
+    @Transactional
+    public void transferFunds(String fromAccountNumber, String toAccountNumber, double amount)
+            throws AccountNotFoundException, InvalidAmountException, InsufficientFundsException {
         if (fromAccountNumber.equals(toAccountNumber)) {
             throw new InvalidAmountException("Cannot transfer funds to the same account.");
         }
@@ -108,5 +130,8 @@ public class BankService implements IBankService {
 
         Transaction transferIn = new Transaction(LocalDate.now(), TransactionType.TRANSFER, amount);
         toAccount.addTransaction(transferIn);
+
+        accountRepository.save(fromAccount);
+        accountRepository.save(toAccount);
     }
 }

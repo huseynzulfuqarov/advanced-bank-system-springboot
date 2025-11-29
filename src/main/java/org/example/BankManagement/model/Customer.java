@@ -1,43 +1,30 @@
 package org.example.BankManagement.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.UUID;
 
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
 public class Customer {
-    private final String customerId;
+    @Id
+    private String customerId;
     private String fullName;
     private String address;
-    private final String accountPassword;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private String accountPassword;
 
     public Customer(String fullName, String address, String accountPassword) {
         this.customerId = UUID.randomUUID().toString();
         this.fullName = fullName;
         this.address = address;
         this.accountPassword = accountPassword;
-    }
-
-    public String getCustomerId() {
-        return customerId;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getAccountPassword() {
-        return accountPassword;
     }
 
     @Override

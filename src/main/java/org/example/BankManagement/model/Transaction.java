@@ -1,14 +1,28 @@
 package org.example.BankManagement.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
 public class Transaction {
-    private final String transactionId;
+    @Id
+    private String transactionId;
     private LocalDate transactionDate;
-    private TransactionType  transactionType;
+
+    @Enumerated(EnumType.STRING)
+    private TransactionType transactionType;
     private double amount;
 
     public Transaction(LocalDate transactionDate, TransactionType transactionType, double amount) {
@@ -18,38 +32,12 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public String getTransactionId() {
-        return transactionId;
-    }
-
-    public double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    public TransactionType getTransactionType() {
-        return transactionType;
-    }
-
-    public void setTransactionType(TransactionType transactionType) {
-        this.transactionType = transactionType;
-    }
-
-    public LocalDate getTransactionDate() {
-        return transactionDate;
-    }
-
-    public void setTransactionDate(LocalDate transactionDate) {
-        this.transactionDate = transactionDate;
-    }
-
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Transaction that)) return false;
-        return Double.compare(amount, that.amount) == 0 && Objects.equals(transactionId, that.transactionId) && Objects.equals(transactionDate, that.transactionDate) && transactionType == that.transactionType;
+        if (!(o instanceof Transaction that))
+            return false;
+        return Double.compare(amount, that.amount) == 0 && Objects.equals(transactionId, that.transactionId)
+                && Objects.equals(transactionDate, that.transactionDate) && transactionType == that.transactionType;
     }
 
     @Override

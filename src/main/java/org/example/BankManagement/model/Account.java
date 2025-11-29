@@ -1,6 +1,9 @@
 package org.example.BankManagement.model;
 
-
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.example.BankManagement.exception.InsufficientFundsException;
 
 import java.util.ArrayList;
@@ -8,10 +11,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@Getter
+@Setter
+@NoArgsConstructor
 public abstract class Account {
-    private final String accountNumber;
+    @Id
+    private String accountNumber;
     private double balance;
+
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
     private Customer owner;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Transaction> transactions = new ArrayList<>();
 
     public Account(double balance, Customer customer) {
@@ -20,39 +34,11 @@ public abstract class Account {
         this.owner = customer;
     }
 
-    public String getAccountNumber() {
-        return accountNumber;
+    public void addTransaction(Transaction transaction) {
+        this.transactions.add(transaction);
     }
 
-    public double getBalance() {
-        return balance;
-    }
-
-    public void setBalance(double balance) {
-        this.balance = balance;
-    }
-
-    public Customer getOwner() {
-        return owner;
-    }
-
-    public void setOwner(Customer owner) {
-        this.owner = owner;
-    }
-
-    public List<Transaction> getTransactions() {
-        return List.copyOf(transactions);
-    }
-
-    public void setTransactions(List<Transaction> transactions) {
-        this.transactions =  new ArrayList<>(transactions);
-    }
-
-    public void addTransaction(Transaction transactions) {
-        this.transactions.add(transactions);
-    }
-
-    public void deposit(double amount){
+    public void deposit(double amount) {
         this.balance += amount;
     }
 
@@ -60,13 +46,15 @@ public abstract class Account {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Account account)) return false;
-        return Double.compare(balance, account.balance) == 0 && Objects.equals(accountNumber, account.accountNumber) && Objects.equals(owner, account.owner) && Objects.equals(transactions, account.transactions);
+        if (!(o instanceof Account account))
+            return false;
+        return Double.compare(balance, account.balance) == 0 && Objects.equals(accountNumber, account.accountNumber)
+                && Objects.equals(owner, account.owner);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(accountNumber, balance, owner, transactions);
+        return Objects.hash(accountNumber, balance, owner);
     }
 
     @Override
@@ -75,7 +63,6 @@ public abstract class Account {
                 "accountNumber='" + accountNumber + '\'' +
                 ", balance=" + balance +
                 ", owner=" + owner +
-                ", transactions=" + transactions +
                 '}';
     }
 }
